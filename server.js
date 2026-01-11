@@ -266,10 +266,163 @@ app.put('/api/auth/profile', (req, res) => {
 
 // ========== PRODUCTS API ==========
 
-// Get products from Fakestore API
-app.get('/api/products', getProducts);
-app.get('/api/products/:id', getProductById);
-app.get('/api/products/categories', getCategories);
+app.get('/api/products', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 8;
+
+        // Demo products with working images
+        const demoProducts = [
+            {
+                _id: 1,
+                name: 'Demo Backpack',
+                description: 'High-quality backpack for daily use.',
+                price: 109.95,
+                image: 'https://svenklas.com/cdn/shop/files/106327991_23844933756050191_6747497_76546171_n.jpg?v=1719404873&width=600',
+                category: 'bags',
+                brand: 'Generic',
+                countInStock: 25,
+                rating: 4.2
+            },
+            {
+                _id: 2,
+                name: 'Demo T-Shirt',
+                description: 'Comfortable cotton t-shirt.',
+                price: 22.3,
+                image: 'https://m.media-amazon.com/images/I/51mNFrB7YiL.jpg',
+                category: 'clothing',
+                brand: 'Generic',
+                countInStock: 50,
+                rating: 4.0
+            },
+            {
+                _id: 3,
+                name: 'Demo Jacket',
+                description: 'Stylish jacket for winters.',
+                price: 55.99,
+                image: 'https://m.media-amazon.com/images/I/41bEGfPRNcL.jpg',
+                category: 'clothing',
+                brand: 'Generic',
+                countInStock: 15,
+                rating: 4.1
+            },
+            {
+                _id: 4,
+                name: 'Demo Shoes',
+                description: 'Comfortable running shoes.',
+                price: 75.5,
+                image: 'https://leatherneed.com/cdn/shop/files/Grid_Photo_16.jpg?v=1754140232&width=1080',
+                category: 'shoes',
+                brand: 'Generic',
+                countInStock: 30,
+                rating: 4.0
+            },
+            {
+                _id: 5,
+                name: 'Demo Laptop',
+                description: 'Lightweight laptop for work & study.',
+                price: 450,
+                image: 'https://p1-ofp.static.pub/medias/27150701757_Legion_Pro_5_10_RGB_202504010320461757071256062.png?width=400&height=400',
+                category: 'electronics',
+                brand: 'Generic',
+                countInStock: 20,
+                rating: 4.3
+            },
+            {
+                _id: 6,
+                name: 'Demo Phone',
+                description: 'Smartphone with latest features.',
+                price: 199,
+                image: 'https://via.placeholder.com/300x300?text=Demo+Phone',
+                category: 'electronics',
+                brand: 'Generic',
+                countInStock: 40,
+                rating: 4.0
+            },
+            {
+                _id: 7,
+                name: 'Demo Watch',
+                description: 'Elegant analog watch.',
+                price: 79.99,
+                image: 'https://via.placeholder.com/300x300?text=Demo+Watch',
+                category: 'accessories',
+                brand: 'Generic',
+                countInStock: 35,
+                rating: 4.2
+            },
+            {
+                _id: 8,
+                name: 'Demo Sunglasses',
+                description: 'Trendy sunglasses for summer.',
+                price: 25.99,
+                image: 'https://via.placeholder.com/300x300?text=Demo+Sunglasses',
+                category: 'accessories',
+                brand: 'Generic',
+                countInStock: 60,
+                rating: 4.1
+            }
+        ];
+
+        const totalProducts = demoProducts.length;
+        const totalPages = Math.ceil(totalProducts / limit);
+        const startIndex = (page - 1) * limit;
+        const paginatedProducts = demoProducts.slice(startIndex, startIndex + limit);
+
+        res.json({
+            success: true,
+            products: paginatedProducts,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalProducts,
+                productsPerPage: limit,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Products error:', error);
+        res.status(500).json({
+            success: false,
+            products: [],
+            pagination: {
+                currentPage: 1,
+                totalPages: 1,
+                totalProducts: 0,
+                hasNextPage: false,
+                hasPrevPage: false
+            }
+        });
+    }
+});
+
+app.get('/api/products/:id', (req, res) => {
+    const demoProduct = {
+        _id: req.params.id,
+        name: "Demo Product",
+        description: "This is a demo product description",
+        price: 99.99,
+        image: "https://via.placeholder.com/300x300?text=Demo+Product",
+        category: "electronics",
+        brand: "Generic",
+        countInStock: 25,
+        rating: 4.0
+    };
+
+    res.json({
+        success: true,
+        product: demoProduct
+    });
+});
+
+app.get('/api/products/categories', (req, res) => {
+    const categories = ["bags", "clothing", "shoes", "electronics", "accessories"];
+    res.json({
+        success: true,
+        categories
+    });
+});
 
 // ========== ORDERS API ==========
 let orders = [];
