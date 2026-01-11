@@ -1,6 +1,7 @@
-const axios = require('axios');
+import axios from 'axios';
+import Product from '../models/Product.js';
 
-// Get products from FakeStore API
+// Optional: fetch products from fakestore API (only if needed)
 const getProductsFromAPI = async () => {
     try {
         const response = await axios.get('https://fakestoreapi.com/products');
@@ -10,7 +11,7 @@ const getProductsFromAPI = async () => {
     }
 };
 
-// Transform API data
+// Transform API data (optional)
 const transformProductData = (apiProducts) => {
     return apiProducts.map(product => ({
         _id: product.id,
@@ -27,60 +28,54 @@ const transformProductData = (apiProducts) => {
 };
 
 // Get all products
-const getProducts = async (req, res) => {
-    try {
-        const apiProducts = await getProductsFromAPI();
-        const products = transformProductData(apiProducts);
-        
-        res.json({
-            products,
-            total: products.length,
-            success: true
-        });
-    } catch (error) {
-        console.error('Error fetching products:', error.message);
-        res.status(500).json({ message: error.message, success: false });
-    }
+export const getProducts = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 8;
+
+    const totalProducts = await Product.countDocuments();
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    const products = await Product.find()
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    res.json({
+      success: true,
+      products,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalProducts,
+        productsPerPage: limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error fetching products' });
+  }
 };
 
 // Get single product
-const getProductById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const response = await axios.get(`https://fakestoreapi.com/products/${id}`);
-        const apiProduct = response.data;
-        
-        const product = {
-            _id: apiProduct.id,
-            name: apiProduct.title,
-            description: apiProduct.description,
-            price: apiProduct.price,
-            image: apiProduct.image,
-            category: apiProduct.category,
-            brand: 'Generic',
-            countInStock: Math.floor(Math.random() * 100) + 1,
-            rating: apiProduct.rating ? apiProduct.rating.rate : 4.0,
-            numReviews: apiProduct.rating ? apiProduct.rating.count : 10
-        };
-        
-        res.json({ product, success: true });
-    } catch (error) {
-        res.status(404).json({ message: 'Product not found', success: false });
-    }
+export const getProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+
+    res.json({ success: true, product });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 };
 
 // Get categories
-const getCategories = async (req, res) => {
-    try {
-        const response = await axios.get('https://fakestoreapi.com/products/categories');
-        res.json({ categories: response.data, success: true });
-    } catch (error) {
-        res.status(500).json({ message: error.message, success: false });
-    }
-};
-
-module.exports = {
-    getProducts,
-    getProductById,
-    getCategories
+export const getCategories = async (req, res) => {
+  try {
+    const categories = await Product.distinct('category');
+    res.json({ success: true, categories });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error fetching categories' });
+  }
 };
