@@ -271,12 +271,30 @@ app.get('/api/products', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 8;
-        
+
         console.log(`📦 Fetching products page ${page}...`);
-        
-        const response = await axios.get('https://fakestoreapi.com/products');
-        const allProducts = response.data;
-        
+
+        let allProducts = [];
+
+        try {
+            const response = await axios.get('https://fakestoreapi.com/products');
+            allProducts = response.data || [];
+            console.log(`📦 Fakestore API returned ${allProducts.length} products`);
+        } catch (apiError) {
+            console.warn('⚠️ Fakestore API failed, using demo fallback products', apiError.message);
+
+            // Fallback demo products
+            allProducts = [
+                { id: 1, title: 'Demo Backpack', price: 109.95, description: 'Demo product 1', image: 'https://via.placeholder.com/300', category: 'bags', rating: { rate: 4 } },
+                { id: 2, title: 'Demo T-Shirt', price: 22.3, description: 'Demo product 2', image: 'https://via.placeholder.com/300', category: 'clothing', rating: { rate: 4.2 } },
+                { id: 3, title: 'Demo Jacket', price: 55.99, description: 'Demo product 3', image: 'https://via.placeholder.com/300', category: 'clothing', rating: { rate: 4.1 } },
+                { id: 4, title: 'Demo Shoes', price: 75.5, description: 'Demo product 4', image: 'https://via.placeholder.com/300', category: 'shoes', rating: { rate: 4 } },
+                { id: 5, title: 'Demo Laptop', price: 450, description: 'Demo product 5', image: 'https://via.placeholder.com/300', category: 'electronics', rating: { rate: 4.3 } },
+                { id: 6, title: 'Demo Phone', price: 199, description: 'Demo product 6', image: 'https://via.placeholder.com/300', category: 'electronics', rating: { rate: 4 } },
+            ];
+        }
+
+        // Map products to your standard format
         const products = allProducts.map(product => ({
             _id: product.id,
             name: product.title,
@@ -288,30 +306,30 @@ app.get('/api/products', async (req, res) => {
             countInStock: Math.floor(Math.random() * 100) + 1,
             rating: product.rating?.rate || 4.0
         }));
-        
+
         // Pagination
         const totalProducts = products.length;
         const totalPages = Math.ceil(totalProducts / limit);
         const startIndex = (page - 1) * limit;
         const paginatedProducts = products.slice(startIndex, startIndex + limit);
-        
+
         res.json({
             success: true,
             products: paginatedProducts,
             pagination: {
                 currentPage: page,
-                totalPages: totalPages,
-                totalProducts: totalProducts,
+                totalPages,
+                totalProducts,
                 productsPerPage: limit,
                 hasNextPage: page < totalPages,
                 hasPrevPage: page > 1
             }
         });
-        
+
     } catch (error) {
         console.error('❌ Products error:', error.message);
-        res.json({
-            success: true,
+        res.status(500).json({
+            success: false,
             products: [],
             pagination: {
                 currentPage: 1,
