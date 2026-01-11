@@ -455,7 +455,7 @@ app.get('/api/test', (req, res) => {
 // ========== START SERVER ==========
 const PORT = process.env.PORT || 5000;
 
-const MONGO_URI = process.env.MONGO_URI || "your_mongodb_connection_string_here";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://subha_mariappan:Subha%40555@cluster0.wdrvva8.mongodb.net/E-commerceDB";
 
 // Connect to MongoDB
 mongoose.connect(MONGO_URI, {
