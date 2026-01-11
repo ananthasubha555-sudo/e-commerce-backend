@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
+import mongoose from "mongoose";
+
 
 const app = express();
 
@@ -453,7 +455,19 @@ app.get('/api/test', (req, res) => {
 });
 
 // ========== START SERVER ==========
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
+
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://subha_mariappan:Subha%40555@cluster0.wdrvva8.mongodb.net/E-commerceDB";
+
+// Connect to MongoDB
+mongoose.connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+})
+.then(() => console.log('✅ MongoDB connected successfully'))
+.catch((error) => console.error('❌ MongoDB connection error:', error));
+
+
 
 app.listen(PORT, () => {
     console.log(`
